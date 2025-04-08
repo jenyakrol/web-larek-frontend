@@ -115,6 +115,7 @@ export interface IProductCard {
     description?: HTMLParagraphElement
     image?: HTMLImageElement
     deleteButton?: HTMLButtonElement
+    events: IEvents
     render(item: TProductInfo | TProductDetailedInfo | TProductShortInfo): HTMLElement
     deleteCard(cardsContainer: IProductsData): void
 }
@@ -218,6 +219,7 @@ export interface IModalContent {
 - `description?: HTMLParagraphElement` - элемент описания внутри темплейта
 - `image?: HTMLImageElement` - элемент картинки внутри темплейта
 - `deleteButton?: HTMLButtonElement` - элемент кнопки удаления карточки
+- `events: IEvents`
 
 
 Обладает методом:
