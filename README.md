@@ -42,7 +42,15 @@ yarn build
 ```
 ## Данные и типы данных
 
-#### Одна единица продукта
+Базовые типы данных
+
+```
+export type Id = string
+export type Url = string
+export type Price = number | null
+export type PayMethod = 'online' | 'cash'
+```
+Данные продукта приходящие с сервера
 
 ```
 export interface IProduct {
@@ -50,96 +58,66 @@ export interface IProduct {
    title: string
    price: Price
    image: Url
-   description: string
+   descrtiption: string
    category: string
 }
 ```
-#### Пользователь
+Данные вводимы в форма при оформлении заказа
 ```
-export interface IUser {
-    basket: IProductsData
-    basketTotalPrice: Price
-    address: string
-    email: string
+export interface IDeliveryForm {
     payMethod: PayMethod
-    phoneNumber: string
+    address: string
+}
+
+export interface IContactsForm {
+    email: string
+    phone: string
 }
 ```
-#### Модель для хранения данных нескольких продуктов
+Данные об ошибках в формах
 ```
-export interface IProductsData {
-    items: IProduct[]
-    add(item: IProduct): void
-    remove(item: IProduct): void
-    getItem(id: Id): IProduct
+export type FormErrors = Partial<Record<keyof (IDeliveryForm & IContactsForm), string>>
+```
+Данные приложения
+```
+export interface IAppState {
+    delivery: IDeliveryForm
+    contacts: IContactsForm
+    basket: string[]
+    formErrors: FormErrors
 }
 ```
-#### Данные продукта на главной странице
+Данные для отображения данных на главной странице
 ```
-export type TProductInfo = Pick<IProduct, 'title' | 'price' | 'image' | 'category'>
-```
-#### Данные продукта при открытии в модальном окне
-```
-export type TProductDetailedInfo = Pick<IProduct, 'title' | 'price' | 'image' | 'category' | 'description'>
-```
-#### Данные продукта при показе в корзине
-```
-export type TProductShortInfo = Pick<IProduct, 'title' | 'price'>
-```
-#### Данные пользователя в форме оформления доставки
-```
-export type TUserDeliverySettings = Pick<IUser, 'payMethod' | 'address'>
-```
-#### Данные пользователя в форме контактной информации
-```
-export type TUserContactInfo = Pick<IUser, 'phoneNumber'| 'email'>
-```
-
-#### Базовые типы данных
-```
-export type Id = string // Идентификатор продукта
-export type Url = string // Ссылка на картинку
-export type Price = number // Цена продуктов
-export type PayMethod = 'online' | 'cash' // Способ оплаты заказа
-```
-
-## Типы отображений
-#### Карточки товаров отображаемые на странице
-
-```
-export interface IProductCard {
-    container: HTMLElement
-    title: HTMLHeadingElement
-    price: HTMLSpanElement
-    category?: HTMLSpanElement
-    description?: HTMLParagraphElement
-    image?: HTMLImageElement
-    deleteButton?: HTMLButtonElement
-    events: IEvents
-    render(item: TProductInfo | TProductDetailedInfo | TProductShortInfo): HTMLElement
-    deleteCard(cardsContainer: IProductsData): void
+export interface IPage {
+  counter: number
+  catalog: IProduct[]
+  locked: boolean
 }
 ```
-#### Модальное окно на странице
+Данные для отображения контента внутри модального окна
 ```
-export interface IModalWindow {
-    modal: HTMLElement
-    events: IEvents
-    open(template: HTMLElement): void
-    close(): void
+export interface IModal {
+  content: HTMLElement
 }
 ```
-
-#### Контент отображаемый внутри модального окна
+Данные для отображения ошибок валидации в формах
 ```
-export interface IModalContent {
-    content: HTMLElement
-    modalWindow: IModalWindow
-    events: IEvents
-    open(): void
+export interface IFormState {
+  valid: boolean
+  errors: string
 }
 ```
-
+Данные для отображения в карточках с товарами
+```
+export type ICard = Pick<IProduct, 'title' | 'descrtiption' | 'price' | 'image' | 'id' | 'category'>
+```
+Данные для отображения в окне с оповещением об оформлении заказа
+```
+export interface ISuccess {
+  total: number
+}
+```
 ## Архитектура приложения
 
 Код приложения разделен  на слои согласно парадигме MVP:
@@ -169,130 +147,119 @@ export interface IModalContent {
 
 ### Слой данных
 
-#### Класс `ProductsData`
+Классы отвечающие за хранение о работу с данными.
 
-Класс отвечает за хранение и логику работы с данными продуктов.\
-Конструктор класса принимает инстант брокера событий.\
-В полях класса хранятся следующие данные:
-- `_items: IProduct[]` - массив объектов товаров.
-- `events: IEvents` - экземпляр класса `EventEmitter` для инициализации событий при изменении данных.
+#### Абстрактный класс `Model<T>`
+Класс нужный для записи данных, типы данных передаются через дженерик.\
+В конструктор принимает данные с типом `Partial<T>` и эвент эмиттер.
+Методы:
+- `emitChanges(event: string, payload?: object)` - Сообщить всем что модель поменялась
 
-Так же класс предоставляет набор методов для взаимодействия с этими данными:
+#### Класс `Product`
+Расширяет класс `Model<IProduct>`. Имеет поля соответствующие интерфейсу `IProduct`.\
+Добавляет поле:
+- `isPurchased: boolean` - для хранения информации о том куплен/добавлен в корзину или нет.
 
-- `add(item: IProduct): void` - добавляет товар в массив
-- `remove(item: IProduct): void` - убирает товар из массива
-- `getItem(id: Id): IProduct` - возвращает товар по идентификатору
-- а так-же геттеры и сеттеры для получения и сохранения данных из полей класса
+Предоставляет метод `togglePurchasedStatus()` для переключения состояния покупки
 
-#### Класс `Basket`
+#### Класс `AppState`
+Расширяет класс `Model<IAppState>`. Нужен для глобального описания работы с данными приложения.\
+Имеет поля соответствующие интерфейсу `IAppState`:
 
-Расширяет класс `ProductsData` добавляет к нему метод:
-- `getTotalPrice(): Price` - находит сумму всех товаров в корзине
+Методы:
+- `clearBasket()` - для полной очистки корзины
+- `get total(): number` - для подсчета общей суммы товаров в корзине
+- `set catalog(items: IProduct[])` - для установки значения каталога товаров на главной странице
+- `set delivery(data: Partial<IDeliveryForm>)`
+- `set contacts(data: Partial<IContactsForm>)`
 
-#### Класс `UserData`
-
-Класс отвечает за хранение и логику работы с данными пользователя.\
-Конструктор класса принимает инстант брокра событий.\
-В полях класса хранятся следующие данные:
-- `basket: IProductsData` - корзина хранящая товары добавленные пользователем
-- `basketTotalPrice: Price` - общая стоимость товаров в корзине
-- `address: string` - адрес введенный пользователем при оформлении заказа
-- `email: string` - адрес электронной почты пользователя
-- `payMethod: PayMethod` - способ оплаты выбранный пользователем
-- `phoneNumber: string` - телефонный номер пользователя
-
-Так же класс предоставляет набор методов для работы с этими данными:
-- `setUserInfo(userData: IUser): void` - сохраняет данные пользователя
-- `checkUserValidation(data: Record<keyof TUserDeliverySettings, string> | Record<keyof TUserContactInfo, string>): boolean` - проверяет валидность введенных данных
+- `validateDelivery(): boolean`
+- `validateContacts(): boolean`
 
 ### Слой представления
 
 Все классы представления отвечают за отображение внутри контейнера(DOM-элемент) передаваемых в них данных
 
-#### Класс ProductCard
-Класс карточки товара. В конструкторе принимает дом элемент темплейта карточки и объект селекторов внутренних элементов.
-
-- `container: HTMLElement` - элемент карточки
-- `title: HTMLHeadingElement` - элемент названия внутри темплейта
-- `price: HTMLSpanElement` - элемент стоимости товара внутри темплейта
-- `category?: HTMLSpanElement` - элемент категории внутри темплейта
-- `description?: HTMLParagraphElement` - элемент описания внутри темплейта
-- `image?: HTMLImageElement` - элемент картинки внутри темплейта
-- `deleteButton?: HTMLButtonElement` - элемент кнопки удаления карточки
-- `events: IEvents`
-
-
-Обладает методом:
-- `render(item: TProductInfo | TProductDetailedInfo | TProductShortInfo): HTMLElement` - создает и возвращает элемент карточки с данными переданными в качестве аргумента
-- `deleteCard(cardsContainer: IProductsData): void` - удаляет карточку из DOM-древа и из переданного контейнера с данными карточек
-
-
-#### Класс ModalWindow
-Реализует модальное окно.
-Устанавливает слушатели на клавиатуру, для закрытия модального окна по Esc, на клик в оверлей и кнопку-крестик для закрытия попапа.
-- `constructor(modal: HTMLElement, events: IEvents)` Конструктор принимает элемент модального окна и экземпляр класса `EventEmitter` для возможности инициации событий.
-
-Поля класса
-- `modal: HTMLElement` - элемент модального окна
-- `events: IEvents` - брокер событий
-
-Так же предоставляет методы:
-- `open(template: HTMLElement): void` - для открытия модального окна и замены внутреннего контента
-- `close(): void` для закрытия модального окна.
-
-#### Класс ModalContent
-Предназначен для реализации внутреннего контента модального окна. В конструкторе принимает темплейт внутреннего контента, экземпляр класса `ModalWindow` и экземпляр класса `EventEmitter`.
-- `content: HTMLElement` - внутренний контент модального окна
-- `modalWindow: IModalWindow` - модальное окно
-- `events: IEvents` - брокер событий
-
-Имеет метод: `open(): void` - открывает модальное окно переданное при инициализации объекта и передает ему в качестве аргумента контент
-
-#### Класс ModalSuccess
-Расширяет класс `ModalContent`. Предназначен для реализации окна с оповещением пользователя о покупке
-
-Имеет поля:
-
-- `submitButton: HTMLButtonElement` - кнопка нажатие на которую должно инициализировать событие закрытия окна
-- `totalPurchasePrice: HTMLParagraphElement` - элемент выводящий полную сумму потраченную при покупке
-
-Имеет метод:
-- `open(basket: Basket): void` - расширяет родительский метод, выводит сумму переданной корзины в контенте окна и очищает коризну от товаров.
-
-#### Класс ModalProductPreview
-Расширяет класс `Modal`. Предназначен для реализации окна с превью товара перед добавлением в корзину. 
-
-- `buyButton: HTMLButtonElement` - кнопка добавления товара в корзину
-
-Методы: 
-- `open(item: IProduct, basket: Basket, card: IProductCard): void` - расширение родительского метода с созданием карточки с переданными данными и заменой данных внутри модального окна
-
-#### Класс ModalBasket
-Расширяет класс `ModalContent`. Предназначен для реализации модального окна с видом корзины пользователя. При сабмите инициирует событие передавая в него свойство корзины.
-
-- `basket: Basket` - активная корзина пользователя
-- `basketList: HTMLUListElement` - элемент списка товаров в корзине
-- `submitButton: HTMLButtonElement` - элемент кнопки оформления заказа
-- `totalPrice: HTMLSpanElement` - элемент отображающий суммарную стоимость товаров корзины
-
-Метод:
-- `open(card: IProductCard, basket: Basket): void` - расширяет родительский метод, добавляет элементы класса кард на основе товаров содержащихся в корзине в элемент списка товаров и выводит общую сумму товаров.
-
-#### Класс ModalWithForm
-Расширяет класс `ModalContent`. Предназначен для реализации модального окна с формами. При сабмите инициирует событие передавая в него объект с данными из полей ввода формы. При изменении данных в полях ввода инициирует событие изменения данных. Предоставляет методы для отображения ошибок и управления активностью кнопки сохранения.
-
-- `submitButton: HTMLButtonElement` - Кнопка подтверждения
-- `form: HTMLFormElement` - элемент формы
-- `formName: string` - значение атрибута name формы
-- `inputs: NodeListOf<HTMLInputElement>` - коллекция всех полей ввода формы
-- `errors: HTMLSpanElement` - элемент для вывода ошибок рядом с кнопкой подтверждения
+#### Абстрактный класс `Component<T>`
+Создает класс для работы элементами разметки. В дженерике получает тип данных которые содержит. В конструктор принимает `HTMLElement`
 
 Методы:
+- `toggleClass(element: HTMLElement, className: string, force?: boolean): void` - Переключает класс у переданного внутрь элемента.
+- `protected setText(element: HTMLElement, value: string): void` - Метод переключающий текст у переданного элемента
+- `setDisabled(element: HTMLElement, state: boolean): void` - Меняет статус блокировки элемента
+- `protected setHidden(element: HTMLElement)` - Скрывает элемент на странице
+- `protected setVisible(element: HTMLElement)` - Показывает элемент на странице
+- `protected setImage(element: HTMLImageElement, src: string, alt?: string)` - Устанавливает изображение с альтернативным текстом в элемент
+- `render(data?: Partial<T>): HTMLElement` - Добавляет к объекту переданные данные и возвращает корневой `HTMLElement`
 
-- `setValid(isValid: boolean): void` - изменяет активность кнопки подтверждения
-- `getInputValues(): Record<string, string>` - возвращает объект с данными из полей формы, где ключ - name инпута, значение - данные введенные пользователем
-- `showInputError (errorMessage: string): void` - отображает полученный текст ошибки
-- `hideInputError (): void` - очищает текст ошибки
+#### Класс `Page`
+Расширяет класс `Component<IPage>`. Описывает отображение главной страницы. В конструктор дополнительно принимает эвент эмиттер.
+
+- `basket: HTMLButtonElement` - Кнопка при нажатии на которую вызывается события
+- `_counter: HTMLSpanElement` - Счетчик товаров в корзине
+- `_catalog: HTMLDivElement` - Элемент содержащий каталог товаров
+_ `wrapper: HTMLDivElement` - Элемент обертки страницы
+
+Методы:
+- `set counter(value: number)`
+- `set catalog(items: IProduct[])`
+- `set locked(value: boolean)`
+
+
+#### Класс `Modal`
+Расширяет класс `Component<IModal>`. Нужен для описания работы модального окна. В конструктор дополнительно принимает эвент эмиттер.
+
+- `closeButton: HTMLButtonElement` - кнопка закрытия модального окна
+- `_content: HTMLElement` - контент внутри модального окна
+
+Методы:
+- `set content(value: HTMLElement)`
+- `open()`
+- `close()`
+- `render()` - расширяет родительский метод, дополнительно открывая модальное окно
+
+#### Класс `Card`
+Расширяет класс `Component<ICard>`. Нужен для работы с представлением карточки товара. В конструктор дополнительно принимает эвент эмиттер и функцию-коллбэк для кнопки внутри карточки.
+- `button: HTMLButtonElement` - Кнопка взаимодействия внутри карточки
+- `_title: HTMLElement` - Название товара
+- `_price: HTMLSpanElement` - Цена товара
+
+- `_description?: HTMLParagraphElement` - Описание товара
+- `_image?: HTMLImageElement` - Картинка товара
+- `_category?: HTMLSpanElement` - Категория товара
+
+Методы:
+- `set title(value: string)`
+- `set price(value: Price)`
+- `set description(value: string)`
+- `set image(value: Url)`
+- `set category(value: string)`
+
+#### Класс `Form<T>`
+Расширяет класс `Component<IFormState>`. В конструктор дополнительно принимает эвент эмиттер. В дженерик получает типы данных вводимые в форму.
+
+Поля:
+- `protected _submit: HTMLButtonElement` - кнопка отправки формы
+- `protected _errors: HTMLElement` - элемент для вывода ошибок валидации
+
+Методы:
+- `protected onInputChange(field: keyof T, value: string)` - срабатывает при инпуте формы, вызывает события в эвент эмиттере
+- `set valid(value: boolean)`
+- `set errors(value: string)`
+- `render(state: Partial<T> & IFormState)` - расширяет родтельский метод, дополнительно принимает значения инпутов в форме
+
+#### Класс `Delivery`
+Расширяет класс `Form<IDeliveryForm>`. Добавляет сеттеры для установки дефолтных значений при открытии формы.
+
+#### Класс `Contacts`
+Расширяет класс `Form<IContactsForm>`. Добавляет сеттеры для установки дефолтных значений при открытии формы.
+
+#### Класс `Success`
+Расширяет класс `Component<ISuccess>`. Нужен для отображения окна с оповещением об успешном оформлении заказа.
+- `button: HTMLButtonElement` - кнопка "За новыми покупками!"
+- `_total: HTMLParagraphElement` - сумма оформленного заказа
+
+Добавляет метод `set total(value: number)` для установки значения в описании заказа
 
 ## Взаимодействие компонентов
 Код, описывающий взаимодействие представления и данных между собой находится в файле `index.ts`, выполняющем роль презентера.\
@@ -303,6 +270,7 @@ export interface IModalContent {
 - `user:changed` - изменение данных пользователя
 - `products:changed` - изменение массива доступных товаров
 - `basket:changed` - изменение массива товаров в корзине
+- `formErrors:changed` - изменение ошибок валидации форм
 
 ### События, возникающие при взаимодействии пользователя с интерфейсом (генерируются классами, отвечающими за представление)
 

@@ -6,12 +6,20 @@
   // height: max-content;
   position: absolute;
   display: none;
-  justify-content: center;
-  background-color: $overlayBackground;
+  justify-content: center;  
   z-index: 100;
   padding-top: 5vh;
   padding-bottom: 5vh;
   box-sizing: border-box;
+  min-height: min-content;
+
+  &::after {
+    content: '';
+    background-color: $overlayBackground;
+    position: fixed;
+    inset: 0;
+    z-index: -1;
+  }
 
   &_active {
     display: flex;
@@ -26,10 +34,13 @@
     border-radius: 3rem;
     box-sizing: border-box;
     position: relative;
+    min-height: fit-content;
   }
 
   &__content {
     flex-grow: 1;
+    z-index: 0;
+    min-height: fit-content;
   }
 
   &__title {
@@ -46,6 +57,7 @@
 
   &__close {
     position: absolute;
+    z-index: 1;
     top: calc(#{$defaultPadding} / 2);
     right: calc(#{$defaultPadding} / 2);
     @include mixins.icon(2rem, 'close');
