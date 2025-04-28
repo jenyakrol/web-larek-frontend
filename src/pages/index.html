@@ -18,6 +18,9 @@
 		<div class="page__wrapper">
 			<header class="header">
 				<div class="header__container">
+          <a href="#0" class="header__logo">
+            <img src="<%=require('../images/logo.svg')%>" class="header__logo-image" alt="">
+          </a>
 					<button class="header__basket" data-trigger-modal="basket">
 						<span class="header__basket-counter">0</span>
 					</button>
@@ -25,16 +28,7 @@
 			</header>
 
 			<main class="gallery">
-				<button class="gallery__item card" data-trigger-modal="card-preview">
-					<span class="card__category card__category_soft">софт-скил</span>
-					<h2 class="card__title">+1 час в сутках</h2>
-					<img
-						class="card__image"
-						src="<%=require('../images/Subtract.svg')%>"
-						alt=""
-					/>
-					<span class="card__price">750 синапсов</span>
-				</button>
+				
 			</main>
 		</div>
 
@@ -116,18 +110,18 @@
 			</div>
 		</template>
 
-		<template id="order">
-			<form class="form" name="order">
+		<template id="delivery">
+			<form class="form" name="delivery">
 				<div class="order">
 					<div class="order__field">
 						<h2 class="modal__title">Способ оплаты</h2>
 						<div class="order__buttons">
-							<button name="card" type="button" class="button button_alt">
+							<input name="pay-method" type="radio" class="button button_alt" value="online" checked>
 								Онлайн
-							</button>
-							<button name="cash" type="button" class="button button_alt">
+            </input>
+							<input name="pay-method" type="radio" class="button button_alt" value="cash">
 								При получении
-							</button>
+							</input>
 						</div>
 					</div>
 					<label class="order__field">
@@ -141,7 +135,7 @@
 					</label>
 				</div>
 				<div class="modal__actions">
-					<button type="submit" disabled class="button order__button">
+					<button type="submit" class="button order__button">
 						Далее
 					</button>
 					<span class="form__errors"></span>
@@ -172,7 +166,7 @@
 					</label>
 				</div>
 				<div class="modal__actions">
-					<button type="submit" disabled class="button">Оплатить</button>
+					<button type="submit" class="button">Оплатить</button>
 					<span class="form__errors"></span>
 				</div>
 			</form>

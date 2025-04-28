@@ -38,12 +38,9 @@ export class EventEmitter implements IEvents {
     /**
      * Снять обработчик с события
      */
-    off(eventName: EventName, callback: Subscriber) {
+    off(eventName: EventName) {
         if (this._events.has(eventName)) {
-            this._events.get(eventName)!.delete(callback);
-            if (this._events.get(eventName)?.size === 0) {
-                this._events.delete(eventName);
-            }
+          this._events.delete(eventName);
         }
     }
 

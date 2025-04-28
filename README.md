@@ -50,6 +50,33 @@ export type Url = string
 export type Price = number | null
 export type PayMethod = 'online' | 'cash'
 ```
+Тип данных получаемых при запрсое каталога товаров с сервера
+
+```
+export type APIProductResponse = {
+  items: IProduct[]
+  total: number
+}
+```
+Данные отправляемые на сервер для обработки заказа
+```
+export type APIOrderPost = {
+  payment: PayMethod
+  email: string
+  phone: string
+  address: string
+  total: Price
+  items: Id[]
+}
+```
+Данные получаемые с сервера после обработки заказа
+```
+export type APIOrderPostResponse = {
+  id: Id
+  total: number
+}
+```
+
 Данные продукта приходящие с сервера
 
 ```
@@ -60,6 +87,8 @@ export interface IProduct {
    image: Url
    descrtiption: string
    category: string
+   isPurchased: boolean
+   togglePurchasedStatus(): void
 }
 ```
 Данные вводимы в форма при оформлении заказа
@@ -76,7 +105,10 @@ export interface IContactsForm {
 ```
 Данные об ошибках в формах
 ```
-export type FormErrors = Partial<Record<keyof (IDeliveryForm & IContactsForm), string>>
+export type FormErrors = {
+  delivery: string
+  contacts: string
+}
 ```
 Данные приложения
 ```
@@ -85,13 +117,14 @@ export interface IAppState {
     contacts: IContactsForm
     basket: string[]
     formErrors: FormErrors
+    catalog: IProduct[]
 }
 ```
 Данные для отображения данных на главной странице
 ```
 export interface IPage {
   counter: number
-  catalog: IProduct[]
+  catalog: HTMLElement[]
   locked: boolean
 }
 ```
@@ -99,6 +132,13 @@ export interface IPage {
 ```
 export interface IModal {
   content: HTMLElement
+}
+```
+Данные для отображения контента внутри окна корзины
+```
+export interface IBasket {
+  basketContainer: HTMLElement[],
+  price: number
 }
 ```
 Данные для отображения ошибок валидации в формах
@@ -110,7 +150,7 @@ export interface IFormState {
 ```
 Данные для отображения в карточках с товарами
 ```
-export type ICard = Pick<IProduct, 'title' | 'descrtiption' | 'price' | 'image' | 'id' | 'category'>
+export type ICard = Pick<IProduct, 'title' | 'descrtiption' | 'price' | 'image' | 'id' | 'category' | 'isPurchased'>
 ```
 Данные для отображения в окне с оповещением об оформлении заказа
 ```
@@ -148,6 +188,13 @@ export interface ISuccess {
 ### Слой данных
 
 Классы отвечающие за хранение о работу с данными.
+
+#### Класс `ShopApi`
+Расширяет класс `Api`. В конструктор дополнительно принимает `cdn` для правильного отображения изображений продуктов.
+
+Добавляет методы:
+- `getProducts(): Promise<IProduct[]>` - Метод для запроса каталога товаров с сервера.
+- `postOrder(data: APIOrderPost): Promise<APIOrderPostResponse>` - Метод для отправки данных заказа на сервер.
 
 #### Абстрактный класс `Model<T>`
 Класс нужный для записи данных, типы данных передаются через дженерик.\
@@ -197,12 +244,12 @@ export interface ISuccess {
 
 - `basket: HTMLButtonElement` - Кнопка при нажатии на которую вызывается события
 - `_counter: HTMLSpanElement` - Счетчик товаров в корзине
-- `_catalog: HTMLDivElement` - Элемент содержащий каталог товаров
-_ `wrapper: HTMLDivElement` - Элемент обертки страницы
+- `_catalog: HTMLElement` - Элемент содержащий каталог товаров
+- `wrapper: HTMLElement` - Элемент обертки страницы
 
 Методы:
 - `set counter(value: number)`
-- `set catalog(items: IProduct[])`
+- `set catalog(items: HTMLElement[])`
 - `set locked(value: boolean)`
 
 
@@ -218,22 +265,46 @@ _ `wrapper: HTMLDivElement` - Элемент обертки страницы
 - `close()`
 - `render()` - расширяет родительский метод, дополнительно открывая модальное окно
 
+#### Класс `Basket`
+Расширяет класс `Component<IBasket>`. Нужен для описания вида корзины с товарами.
+
+- `set basketContainer(items: HTMLElements[])` - для установки продуктов в контейнер корзины
+
 #### Класс `Card`
-Расширяет класс `Component<ICard>`. Нужен для работы с представлением карточки товара. В конструктор дополнительно принимает эвент эмиттер и функцию-коллбэк для кнопки внутри карточки.
+Расширяет класс `Component<ICard>`. Нужен для работы с представлением карточки товара. В конструктор дополнительно функцию-коллбэк для кнопки внутри карточки.
 - `button: HTMLButtonElement` - Кнопка взаимодействия внутри карточки
 - `_title: HTMLElement` - Название товара
 - `_price: HTMLSpanElement` - Цена товара
 
-- `_description?: HTMLParagraphElement` - Описание товара
-- `_image?: HTMLImageElement` - Картинка товара
-- `_category?: HTMLSpanElement` - Категория товара
-
 Методы:
 - `set title(value: string)`
 - `set price(value: Price)`
-- `set description(value: string)`
+
+#### Класс `MainPageCard`
+Расширяет класс `Card`. Нужен для описания отображения карточек продуктов на главной странице.
+Добавляет поля:
+-	`_image: HTMLImageElement`
+-	`_category: HTMLSpanElement`
+
+Добавляет методы:
 - `set image(value: Url)`
 - `set category(value: string)`
+
+#### Класс `PreviewCard`
+Расширяет класс `Card`. Нужен для описания отображения карточек продуктов внутри окна предпросмотра.
+Добавляет поля:
+-	`_image: HTMLImageElement`
+-	`_category: HTMLSpanElement`
+-	`_description: HTMLParagraphElement`
+
+Добавляет методы:
+- `set image(value: Url)`
+- `set category(value: string)`
+- `set description(value: string)`
+- `set isPurchased(state: boolean)` - Нужен для установки состояния кнопки внутри карточки в зависимости от состояния покупки
+
+#### Класс `BasketCard`
+Расширяет класс `Card`. Нужен для описания отображения карточек продуктов внутри окна корзины. В конструктор дополнительно принимает индекс товара в корзине, который установит внутрь специального элемента.
 
 #### Класс `Form<T>`
 Расширяет класс `Component<IFormState>`. В конструктор дополнительно принимает эвент эмиттер. В дженерик получает типы данных вводимые в форму.
@@ -267,25 +338,23 @@ _ `wrapper: HTMLDivElement` - Элемент обертки страницы
 В `index.ts` сначала создаются экземпляры всех необходимых классов, а затем настраивается обработка событий.
 
 ### События изменения данных (генерируются классами моделями данных)
-- `user:changed` - изменение данных пользователя
-- `products:changed` - изменение массива доступных товаров
-- `basket:changed` - изменение массива товаров в корзине
+- `catalog:changed` - изменение массива доступных товаров
 - `formErrors:changed` - изменение ошибок валидации форм
 
 ### События, возникающие при взаимодействии пользователя с интерфейсом (генерируются классами, отвечающими за представление)
 
 #### События открытия различных модальных окон
+- `modal:open`
+- `modal:close`
 - `productPreview:open`
 - `basketModal:open`
-- `deliveryDetails:open`
-- `contactInfo:open`
-- `orderSuccess:open`
+- `delivery:open`
+- `contacts:open`
+- `success:open`
 
 #### События связанные с взимодействиями в модальных окнах
 - `basket:add` - добавление товара в корзину
 - `basket:delete` - удаление из корзины
 - `basket:submit` - подтверждение набора в корзине и начало оформления заказа
-- `deliveryOptions:submit`
+- `delivery:submit`
 - `contacts:submit`
-- `deliveryOptions:validation`
-- `contacts:validation`
