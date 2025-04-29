@@ -119,7 +119,6 @@ export class PreviewCard extends Card {
 	}
 
   set description(value: string) {
-    console.log(value)
     this.setText(this._description, value)
   }
 

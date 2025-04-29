@@ -23,7 +23,7 @@ export class AppState extends Model<IAppState> {
     if(!this._delivery) {
       this._delivery = {
         address: '',
-        payMethod: 'cash'
+        payMethod: 'online'
       }
     }
     if(!this._contacts) {
@@ -72,7 +72,6 @@ export class AppState extends Model<IAppState> {
 	}
 
 	validateDelivery(): boolean {
-    console.log(this._delivery)
 		if (this._delivery.address.length === 0)
 			this.formErrors.delivery = 'Надо ввести адрес доставки';
     else

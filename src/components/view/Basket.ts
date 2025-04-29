@@ -20,6 +20,11 @@ export class Basket extends Component<IBasket> {
   }
 
   set basketContainer(items: HTMLElement[]) {
+    if(items.length === 0) {
+      this.setDisabled(this.button, true)
+    } else {
+      this.setDisabled(this.button, false)
+    }
     this._basketContainer.replaceChildren(...items)
   }
 

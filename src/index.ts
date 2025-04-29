@@ -9,7 +9,7 @@ import { Modal } from './components/view/Modal';
 import { Page } from './components/view/Page';
 import { Success } from './components/view/Success';
 import './scss/styles.scss';
-import { Id, IDeliveryForm, IProduct, PayMethod } from './types';
+import { APIOrderPostResponse, Id, IDeliveryForm, IProduct, PayMethod } from './types';
 import { API_URL, CDN_URL, settings } from './utils/constants';
 import { cloneTemplate, ensureElement } from './utils/utils';
 
@@ -19,8 +19,6 @@ const events = new EventEmitter();
 const appData = new AppState({}, events);
 const page = new Page(ensureElement('body'), events);
 const modal = new Modal(ensureElement('.modal'), events);
-
-events.onAll((event) => console.log(event.eventName));
 
 api.getProducts().then((result) => {
 	appData.catalog = result.map((item) => new Product(item, events));
@@ -141,7 +139,6 @@ events.on(
 );
 
 events.on('delivery:submit', () => {
-	console.log(appData.validateDelivery());
 	if (appData.validateDelivery()) {
 		events.off('formErrors:changed');
 		events.emit('contacts:open');
@@ -152,8 +149,6 @@ events.on('contacts:open', () => {
 	const contactsForm = new Contacts(cloneTemplate('#contacts'), events);
 
 	events.on('formErrors:changed', () => {
-		console.log('jopa');
-		console.log(appData.formErrors);
 		contactsForm.render({
 			valid: appData.formErrors.contacts.length === 0,
 			errors: appData.formErrors.contacts,
@@ -193,16 +188,17 @@ events.on('contacts:submit', () => {
 			.then((result) => {
 				if (result.id && result.total) {
 					events.off('formErrors:changed');
-					events.emit('success:open');
+					events.emit('success:open', result);
 				}
 			});
 	}
 });
 
-events.on('success:open', () => {
+events.on('success:open', (result: APIOrderPostResponse) => {
 	const success = new Success(cloneTemplate('#success'), events);
-	modal.render({ content: success.render({ total: appData.total }) });
+	modal.render({ content: success.render({ total: result.total }) });
 	appData.clearBasket();
+  page.counter = 0
 	api.getProducts().then((result) => {
 		appData.catalog = result.map((item) => new Product(item, events));
 	});

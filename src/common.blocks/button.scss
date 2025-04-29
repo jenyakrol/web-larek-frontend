@@ -17,4 +17,13 @@
     @include mixins.button(white, $primaryLight, $primaryLight);
     border: $hoverBorder;
   }
+
+  &_hidden {
+    display: none;
+  }
+
+  &_pay:checked + .button_alt {
+    @include mixins.button(white, $primaryLight, $primaryLight);
+    border: $hoverBorder;
+  }
 }

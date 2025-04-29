@@ -116,12 +116,18 @@
 					<div class="order__field">
 						<h2 class="modal__title">Способ оплаты</h2>
 						<div class="order__buttons">
-							<input name="pay-method" type="radio" class="button button_alt" value="online" checked>
-								Онлайн
-            </input>
-							<input name="pay-method" type="radio" class="button button_alt" value="cash">
-								При получении
-							</input>
+              <label>
+                <input name="payMethod" type="radio" class="button_pay button_hidden" value="online" checked>
+								  
+                </input>
+                <span class="button button_alt">Онлайн</span>
+              </label>
+              <label>
+                <input name="payMethod" type="radio" class="button_pay button_hidden" value="cash">
+								
+							  </input>
+                <span class="button_alt">При получении</span>
+              </label>							
 						</div>
 					</div>
 					<label class="order__field">
