@@ -1,5 +1,6 @@
 # Проектная работа "Веб-ларек"
 
+#### Ссылка на готовый проект https://jenyakrol.github.io/web-larek-frontend/ 
 Стек: HTML, SCSS, TS, Webpack
 
 Структура проекта:
