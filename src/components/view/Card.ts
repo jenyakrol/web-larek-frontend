@@ -44,7 +44,7 @@ export class MainPageCard extends Card {
 	}
 
 	set image(value: Url) {
-		this.setImage(this._image, value)
+		this.setImage(this._image, value);
 	}
 
 	set category(value: string) {
@@ -56,7 +56,7 @@ export class MainPageCard extends Card {
 			case 'софт-скил':
 				className = '_soft';
 				break;
-			case 'хард':
+			case 'хард-скил':
 				className = '_hard';
 				break;
 			case 'другое':
@@ -69,7 +69,7 @@ export class MainPageCard extends Card {
 				className = '_button';
 				break;
 		}
-    this._category.classList.add('card__category' + className)
+		this._category.classList.add('card__category' + className);
 	}
 }
 
@@ -78,19 +78,22 @@ export class PreviewCard extends Card {
 	_category: HTMLSpanElement;
 	_description: HTMLParagraphElement;
 
-  constructor(container: HTMLElement, onClick: (event: MouseEvent) => void) {
-    super(container, onClick)
+	constructor(container: HTMLElement, onClick: (event: MouseEvent) => void) {
+		super(container, onClick);
 
-    this._image = ensureElement<HTMLImageElement>('.card__image', container);
+		this._image = ensureElement<HTMLImageElement>('.card__image', container);
 		this._category = ensureElement<HTMLSpanElement>(
 			'.card__category',
 			container
 		);
-    this._description = ensureElement<HTMLParagraphElement>('.card__text', container)
-  }
+		this._description = ensureElement<HTMLParagraphElement>(
+			'.card__text',
+			container
+		);
+	}
 
-  set image(value: Url) {
-    this.setImage(this._image, value)
+	set image(value: Url) {
+		this.setImage(this._image, value);
 	}
 
 	set category(value: string) {
@@ -115,28 +118,41 @@ export class PreviewCard extends Card {
 				className = '_button';
 				break;
 		}
-    this._category.classList.add('card__category' + className)
+		this._category.classList.add('card__category' + className);
 	}
 
-  set description(value: string) {
-    this.setText(this._description, value)
-  }
+	set description(value: string) {
+		this.setText(this._description, value);
+	}
 
-  set isPurchased(state: boolean) {
-    if (state) {
-      this.button.classList.add('button_alt')
-      this.setText(this.button, 'Убрать из корзины')
-    }
-    else {
-      this.button.classList.remove('button_alt')
-      this.setText(this.button, 'В корзину')
+	set isPurchased(state: boolean) {
+		if (state) {
+			this.button.classList.add('button_alt');
+			this.setText(this.button, 'Убрать из корзины');
+		} else {
+			this.button.classList.remove('button_alt');
+			this.setText(this.button, 'В корзину');
+		}
+	}
+
+  set price(value: Price) {
+    super.price = value
+    if(value === null) {
+      this.setDisabled(this.button, true)
     }
   }
 }
 
 export class BasketCard extends Card {
-  constructor(index: number, container: HTMLElement, onClick: (event: MouseEvent) => void) {
-    super(container, onClick)
-    this.setText(ensureElement<HTMLSpanElement>('.basket__item-index', container), index)
-  }
+	constructor(
+		index: number,
+		container: HTMLElement,
+		onClick: (event: MouseEvent) => void
+	) {
+		super(container, onClick);
+		this.setText(
+			ensureElement<HTMLSpanElement>('.basket__item-index', container),
+			index
+		);
+	}
 }

@@ -15,7 +15,7 @@ export class Basket extends Component<IBasket> {
     this._price = ensureElement<HTMLSpanElement>('.basket__price', container)
 
     this.button.addEventListener('click', () => {
-       events.emit('basket:submit')
+       events.emit('delivery:open')
     })
   }
 

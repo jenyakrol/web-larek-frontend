@@ -76,7 +76,7 @@ export class AppState extends Model<IAppState> {
 			this.formErrors.delivery = 'Надо ввести адрес доставки';
     else
       this.formErrors.delivery = ''
-		this.emitChanges('formErrors:changed', this.formErrors);
+		this.emitChanges('deliveryFormErrors:changed', this.formErrors);
 		return this.formErrors.delivery.length === 0;
 	}
 
@@ -85,7 +85,7 @@ export class AppState extends Model<IAppState> {
 			this.formErrors.contacts = 'Надо ввести контактную информацию';
     else
       this.formErrors.contacts = ''
-		this.emitChanges('formErrors:changed', this.formErrors);
+		this.emitChanges('contactsFormErrors:changed', this.formErrors);
 		return this.formErrors.contacts.length === 0
 	}
 }
